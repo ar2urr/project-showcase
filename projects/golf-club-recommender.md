@@ -1,42 +1,40 @@
 # Golf Caddy AI
 
-**A golf assistant project combining club selection, personal shot history, and planned video-based swing feedback.**
+A golf assistant for club selection and shot tracking, with personalisation and swing analysis planned next.
 
-**Status:** Python command-line prototype implemented. Machine learning, Bayesian personalisation, a web interface, and swing analysis are planned extensions.
+The Python terminal application is implemented. The ML model, web interface, and video analysis are still planned.
 
-[← All projects](../README.md)
+[Back to projects](../README.md)
 
-## The problem
+## What works now
 
-Choosing a club involves more than checking the distance to the pin. Conditions, the lie of the ball, and a player's own carry distances all matter. Improving a swing presents a related challenge: turning a recording into a small number of useful practice priorities.
+The app recommends a club from the distance to the target, wind conditions, terrain, and player skill. It accepts metric and imperial inputs and applies fixed recommendation rules.
 
-Golf Caddy AI aims to bring these decisions into one application: explain a club recommendation, learn from logged shots, and provide visual feedback on a recorded swing.
+Players can also create a local account, record rounds or practice sessions, and log individual shots. SQLite stores their history. The recommendation logic, terminal prompts, and storage live in separate modules.
 
-## Current foundation
+This version has gaps: some combinations of inputs produce no recommendation, and logged shots do not yet change future suggestions. The local database is not encrypted.
 
-The existing Python application recommends clubs using distance, wind speed and direction, terrain, and player skill. It supports metric and imperial inputs and uses explicit recommendation rules.
+## Learning a player's distances
 
-A companion workflow provides local accounts, round and practice-session tracking, individual shot logging, and history stored in SQLite. Recommendation logic, terminal prompts, account handling, and storage are separated into modules.
+A useful recommendation needs to account for how far that particular player hits each club. My next step is to maintain a distance estimate for each club and update it as shots are logged. Bayesian updates will track both the estimated mean and its uncertainty, with population averages as the starting point.
 
-## Planned feature: personalised club recommendations
+I also plan to add elevation, wind direction relative to the shot, and optional temperature to the inputs. An XGBoost classifier trained on synthetic scenarios will be compared with a rule-based baseline.
 
-The next stage extends the input schema with elevation, wind direction relative to the shot, and optional temperature. A rule-based baseline will be compared with an XGBoost classifier trained initially on synthetic scenarios.
+The interface should explain the choice in terms a player can check: the target distance, the effect of conditions, and their recorded club distances. Any confidence score needs evaluation before it can be treated as a reliable probability.
 
-Per-player club-distance estimates will update as shots are logged, using Bayesian updates to track a mean and uncertainty for each club. Population estimates will provide a fallback when a player has little history.
+## Swing feedback from video
 
-The intended interface shows a recommendation, alternatives, and an explanation of the factors behind it. Model confidence will be evaluated before being presented as a reliable probability.
+The other planned feature is a swing analyser. It will use MediaPipe Pose to locate body landmarks in face-on recordings and find candidate frames for address, the top of the backswing, and impact. Overlays will let users see what the system detected.
 
-## Planned feature: swing analysis
+Before adding named swing faults, I need to establish which measurements are reliable from that camera angle. Body landmarks alone do not reliably reveal every rotation, wrist angle, or club position. Uncertain detections should produce no feedback rather than a confident diagnosis.
 
-The proposed video pipeline uses MediaPipe Pose to extract body landmarks from face-on recordings and identify candidate address, top-of-backswing, and impact frames. Visual overlays will make detections inspectable.
+For observations that pass those checks, the app will show a main practice priority, secondary observations, and relevant drills. Reference swings will provide comparisons, without treating one professional's technique as the only correct way to swing.
 
-The research stage will investigate which posture and movement indicators can be estimated reliably from that camera view. Suitable indicators will be compared with a reference set, with feedback organised into a primary observation, secondary observations, and relevant practice drills.
+Only recordings with permission for the intended use will be included in development or public demonstrations.
 
-The planned app has four pages: **Recommend Club**, **Analyse Swing**, **Log a Shot**, and **My Stats**.
+## How the planned app fits together
 
-## Proposed architecture
-
-The diagram below describes the target design; it does not represent the current implementation.
+Streamlit will provide four pages: Recommend Club, Analyse Swing, Log a Shot, and My Stats. This diagram shows the proposed design.
 
 ```mermaid
 flowchart TD
@@ -52,40 +50,29 @@ flowchart TD
     F --> O[Visual observations and practice feedback]
 ```
 
-## Development roadmap
+## Development plan
 
-These are proposed milestones, rather than completed work or fixed delivery dates.
+The eight-week outline is a proposed sequence, not a delivery commitment. These milestones are still ahead.
 
-| Stage | Focus | Evidence of completion |
+| Stage | Work planned | How I will check it |
 | --- | --- | --- |
-| Weeks 1–2 | Input validation, 2,000 synthetic scenarios, a baseline, XGBoost, and personalisation | Held-out comparison and tests of how club-distance estimates adapt |
-| Week 3 | Recommendation interface, explanations, and shot logging | A working recommender demo backed by SQLite |
-| Weeks 4–5 | Pose extraction, phase detection, and reference measurements | Manually reviewed landmarks and keyframes; documented limits for each supported observation |
-| Week 6 | Integrate video analysis and player statistics | One application with handling for unsupported videos and failed detections |
-| Week 7 | Evaluate recommendations and swing observations | Results tables, error analysis, and documented failure modes |
-| Week 8 | Writeup, screenshots, and demonstration | A concise case study and a two-to-three-minute demo |
+| Weeks 1–2 | Define inputs, generate 2,000 synthetic scenarios, compare a baseline with XGBoost, and add personalisation | Held-out results and tests of how club-distance estimates change with new shots |
+| Week 3 | Build the recommendation interface, explanations, and shot-logging page | A working recommender demo using SQLite |
+| Weeks 4–5 | Extract poses, detect swing phases, and assess reference measurements | Manual review of landmarks and keyframes, with limits recorded for each measurement |
+| Week 6 | Add swing analysis and player statistics to the app | A complete workflow that handles unsupported videos and failed detections |
+| Week 7 | Evaluate recommendations and swing observations | Results tables and a record of errors and failure cases |
+| Week 8 | Write up the work and record a demo | Screenshots and a two-to-three-minute demonstration |
 
-## Evaluation plan
+## How I will evaluate it
 
-- **Recommendations:** compare top-1 and top-3 accuracy against the rule-based baseline on a held-out synthetic set, including a confusion matrix. Synthetic labels derived from rules cannot establish real-world superiority over those rules; validate with independent shot data when available.
-- **Personalisation:** simulate a player whose 7-iron distance differs from the default by 20 metres, then measure estimation error as 30 shots are logged.
-- **Swing analysis:** compare phase detections and supported observations with manual labels on ten unseen videos, separated from the reference and development sets. Report counts, agreement, and failures. Reserve final test videos until thresholds are fixed.
-- **Usability:** demonstrate a recommendation, shot logging, and a supported video-analysis workflow in under three minutes.
+For recommendations, I will compare top-1 and top-3 accuracy with the baseline on held-out synthetic data and inspect the confusion matrix. If the labels come from rules, reproducing them does not prove that the model makes better choices on a golf course. That claim would need independent shot data.
 
-No ML accuracy, personalisation improvement, or swing-analysis agreement results are available yet.
+For personalisation, I will simulate a player whose 7-iron distance is 20 metres above the default and measure the estimation error as 30 shots are logged.
 
-## Technology
+For swing analysis, I will compare phase detections and supported observations with manual labels on ten unseen videos. Those videos will be separate from the reference and development sets, and thresholds will be fixed before the final test. I will report agreement counts and failures, including problems caused by lighting, camera position, and occlusion.
 
-| Implemented foundation | Planned additions |
-| --- | --- |
-| Python, SQLite, SQL, command-line interface | Python 3.11+, uv, XGBoost, Streamlit, MediaPipe Pose, NumPy, Parquet |
+There are no ML accuracy, personalisation, or swing-analysis results to report yet. The final demo should show a recommendation, shot logging, and a supported video workflow in under three minutes.
 
-## Scope and limitations
+The current stack is Python and SQLite. The planned work uses Python 3.11+ with uv, XGBoost, Streamlit, MediaPipe Pose, NumPy, and Parquet.
 
-The current recommender uses fixed rules, has gaps in its supported input combinations, and does not yet learn from shot history. Its local database is not encrypted.
-
-The planned video feature is an experimental practice aid. A single camera view and body landmarks alone cannot reliably recover every rotation, club position, or wrist angle. Supported observations must be validated, and uncertain or occluded detections should be withheld. Reference swings are comparison examples rather than a universal definition of correct technique.
-
-Only recordings with permission for the intended use will be included in development or public demonstrations. The full implementation, personal shot records, and private videos remain outside this public showcase.
-
-**Source availability:** private implementation repository. This page documents the working foundation and the proposed next stages.
+The implementation, personal shot records, and private videos stay in the private project repository.

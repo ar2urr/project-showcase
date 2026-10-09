@@ -1,18 +1,18 @@
-# Control Flow Graph Analysis using Graph Edit Distance
-
-**Investigating structural similarity between Python programs through graph algorithms.**
+# Comparing program structure with graph edit distance
 
 Artur Istratov · Final-year Computer Science project · 2025/26
 
-[← All projects](../README.md)
+[Back to projects](../README.md)
 
-## The research problem
+For this project, I investigated whether control-flow graphs could identify obfuscated versions of a Python function. Renaming variables can change how code looks while leaving its structure intact. Other transformations, such as control-flow flattening, make that comparison much harder.
 
-Programs can look different after variable renaming, dead-code insertion, or more substantial obfuscation. This final-year Computer Science project investigates how control-flow graphs and graph edit distance can help measure structural differences, with potential applications to obfuscation analysis in cybersecurity.
+I built a pipeline to extract program graphs, simplify them, and compare them using graph edit distance (GED). The cybersecurity question was how well structural comparison could recognise program variants.
 
-## The pipeline
+## How it works
 
-The project extracts control-flow graphs from Python bytecode. The reported experiments use basic-block graphs, followed by structural role assignment, linear-chain collapsing, and breadth-first relabelling. Graph edit distance assigns a cost to transforming one graph into another through edits to nodes and edges.
+The pipeline extracts control-flow graphs from Python bytecode. It supports instruction-level and basic-block graphs; the reported experiments use basic blocks.
+
+Before comparison, nodes receive structural roles, linear chains are collapsed, and nodes are relabelled through a breadth-first traversal. GED then measures the cost of transforming one graph into the other through node and edge edits.
 
 ```mermaid
 flowchart LR
@@ -22,47 +22,37 @@ flowchart LR
     D --> E[Evaluation and visualisation]
 ```
 
-## Technical highlights
+I compared A* search with a Hungarian assignment heuristic against Dijkstra search. The implementation also includes an adaptive strategy and a matching-based approximation. Uniform and weighted edit costs let me examine how the cost of different structural changes affects the comparison.
 
-- **Graph representations:** instruction-level graphs and basic-block graphs expose program structure at different levels of detail.
-- **Normalisation:** structural role labels and linear-chain collapsing aim to reduce the influence of superficial differences.
-- **Search strategies:** implementations include A* with an assignment-based heuristic, Dijkstra search, an adaptive strategy, and a matching-based approximation.
-- **Cost models:** uniform and weighted edit costs allow investigation of how structural roles and edit types affect comparisons.
-- **Evaluation tooling:** the pipeline records distance scores, similarity scores, runtime, and explored search states, with graph exports and heatmap generation.
+The evaluation records distance and similarity scores, runtime, and explored search states. It also exports graphs and produces heatmaps. The stack is Python, NetworkX, NumPy, SciPy, and Matplotlib.
 
-## Reported results
+## What the experiment found
 
-The evaluation uses **12 synthetic Python samples**: one baseline, nine obfuscated variants, and two comparison controls. The reported classification results cover **11 comparisons against the baseline**, using the `compute` function and a size-normalised uniform-GED threshold of 0.75.
+The dataset contains 12 synthetic Python samples: a baseline, nine obfuscated variants, and two comparison controls. Classification uses 11 comparisons against the baseline's `compute` function, with a threshold of 0.75 on size-normalised uniform GED.
 
-| Finding | Result in the report | Interpretation |
-| --- | --- | --- |
-| Variant classification | 9 of 11 comparisons correct; approximately 82% accuracy, 89% precision, and 89% recall | Eight true positives and one true negative, with one false positive and one false negative |
-| Surface-level transformations | GED = 0 for variable renaming, dead-code insertion, no-op insertion, and expression splitting | These four samples retain matching graph structure after the pipeline |
-| Search efficiency | Up to 86.6% fewer explored states with A* than Dijkstra under uniform costs | The largest reduction occurs for the bogus-exception sample |
-| Runtime tradeoff | For the combined-obfuscation sample, A* takes 8.66 seconds versus Dijkstra's 5.68 seconds | Exploring fewer states can still take longer when the heuristic is expensive |
+| Measurement | Reported result |
+| --- | --- |
+| Correct classifications | 9 of 11: eight true positives and one true negative |
+| Classification errors | One false positive and one false negative |
+| Accuracy, precision, and recall | Approximately 82%, 89%, and 89% respectively |
+| Surface-level changes | GED = 0 for variable renaming, dead-code insertion, no-op insertion, and expression splitting |
+| Largest reduction in search states | A* explored 86.6% fewer states than Dijkstra for the bogus-exception sample under uniform costs |
+| Combined-obfuscation runtime | A*: 8.66 seconds; Dijkstra: 5.68 seconds |
 
-These are results reported in the final project report, rather than fresh benchmark runs. Classification figures come from the results and confusion-matrix tables on page 26; search and runtime figures come from page 29.
+These figures are from the final report, not a new benchmark run. The classification and confusion-matrix tables are on page 26; the search and runtime results are on page 29.
 
-## Research contribution
+## Fewer search states can still mean a longer run
 
-The project brings together bytecode analysis, graph normalisation, custom GED search implementations, and a controlled evaluation of uniform versus weighted edit costs. It examines both the quality of structural comparisons and the cost of computing them.
+The runtime comparison explains an important tradeoff in the design. A* can avoid exploring parts of the search space, but it pays for the assignment heuristic at each step. On some of these small graphs, that overhead outweighed the saving. Dijkstra finished the combined-obfuscation comparison faster despite exploring more states.
 
-One practical finding is that **stronger pruning does not automatically mean faster execution**: the cost of the Hungarian assignment heuristic can outweigh the work it saves on small graphs. Another is that structural similarity has limits: the combined-obfuscation variant is missed, while one unrelated control is classified as a variant.
+The classification errors also matter. The system missed the variant that combined several obfuscation techniques and incorrectly accepted one unrelated control as a variant. Graph structure alone did not separate every case.
 
-## Technology
+## What these results can support
 
-Python, NetworkX, NumPy, SciPy, and Matplotlib.
+This was a controlled experiment on small Python graphs. The samples were manually constructed from one baseline, and the classification threshold was selected using the same dataset. The reported accuracy therefore does not establish performance on unseen programs or real malware.
 
-## Scope and limitations
+Matching graph structure does not prove matching behaviour. Exact GED also becomes expensive as graphs grow, which makes approximate methods and timeouts relevant to further work.
 
-This is an experimental research tool for small Python program graphs. The dataset is manually constructed from a single baseline, and the classification threshold was selected using the same dataset. These figures do not establish performance on unseen programs or real malware.
+The source repository is private.
 
-Structural similarity does not by itself establish equivalent behaviour or identify malicious software. Exact graph comparison can become computationally expensive as graphs grow; timeouts and approximate methods are relevant tradeoffs.
-
-## What this project demonstrates
-
-Algorithm implementation, program analysis, graph modelling, experimental design, and scientific visualisation.
-
-**Source availability:** private implementation repository; this page is a project overview.
-
-**Report:** Artur Istratov, *Control Flow Graph Analysis using Graph Edit Distance for Cybersecurity Applications*, final undergraduate project report, 6 May 2026.
+Report: Artur Istratov, *Control Flow Graph Analysis using Graph Edit Distance for Cybersecurity Applications*, final undergraduate project report, 6 May 2026.

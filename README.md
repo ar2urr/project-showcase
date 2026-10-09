@@ -1,30 +1,25 @@
-# ar2urr · Project showcase
+# Artur Istratov · Projects
 
-Selected work in Python application development, graph algorithms, and program analysis.
+I build Python applications and work with graph algorithms. These pages describe two of my projects, what works so far, and what I plan to develop next. The source repositories are private.
 
-This portfolio presents the purpose, design, and scope of each project. Implementation repositories are private.
+## Golf Caddy AI
 
-## Featured projects
+A Python application that suggests golf clubs based on shot conditions and records rounds and practice sessions in SQLite. The current version runs in the terminal and uses fixed rules.
 
-### Golf Caddy AI
+I plan to add recommendations that learn from a player's shot history, a Streamlit interface, and swing feedback from video. Those features are still on the roadmap.
 
-A golf assistant project built on a working Python club recommender and SQLite shot tracker. The roadmap adds personalised club-distance estimates, machine-learning recommendations, and video-based swing feedback in a Streamlit application.
+Built with Python and SQLite. Planned additions include XGBoost and MediaPipe Pose.
 
-**Current:** Python · SQLite · Rule-based recommendations  
-**Planned:** XGBoost · Bayesian personalisation · MediaPipe Pose · Streamlit
+[Read about Golf Caddy AI](projects/golf-club-recommender.md)
 
-[Explore the project →](projects/golf-club-recommender.md)
+## Comparing program structure with graph edit distance
 
-### CFG Graph Edit Distance Analysis
+For my final-year Computer Science project, I investigated whether control-flow graphs could identify obfuscated versions of a Python function. I compared A* and Dijkstra search under uniform and weighted edit costs.
 
-A final-year Computer Science research project exploring how graph edit distance can compare the structure of Python programs, including programs modified through obfuscation. The pipeline extracts control-flow graphs, normalises them, and compares search strategies and edit-cost models.
+The experiment classified 9 of 11 baseline comparisons correctly. A* explored up to 86.6% fewer search states, though its heuristic sometimes made it slower than Dijkstra. These results come from a small synthetic dataset; the project page explains where the approach failed.
 
-The final report records **9 of 11 baseline comparisons classified correctly** on a controlled synthetic dataset and **up to 86.6% fewer explored search states with A*** than Dijkstra. The case study explains the evaluation limits and runtime tradeoffs.
+Built with Python, NetworkX, NumPy, SciPy, and Matplotlib.
 
-**Python · NetworkX · SciPy · NumPy · Matplotlib · Program analysis**
-
-[Explore the project →](projects/cfg-ged-analysis.md)
-
----
+[Read about the research](projects/cfg-ged-analysis.md)
 
 [GitHub profile](https://github.com/ar2urr)
